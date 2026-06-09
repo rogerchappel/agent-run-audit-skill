@@ -14,3 +14,9 @@ npm test
 npm run check
 npm run smoke
 ```
+
+## PR Review Focus
+
+- Confirm `check` fails on blocked or high-risk audits.
+- Confirm transcript commands are extracted but never executed.
+- Confirm the Markdown report is concise enough for handoff use.
