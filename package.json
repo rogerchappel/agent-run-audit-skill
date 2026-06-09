@@ -1,0 +1,26 @@
+{
+  "name": "agent-run-audit-skill",
+  "version": "0.1.0",
+  "description": "Audit agent transcripts into evidence-oriented run reports.",
+  "type": "module",
+  "bin": {
+    "agent-run-audit": "./bin/agent-run-audit.js"
+  },
+  "scripts": {
+    "test": "node --test",
+    "check": "node scripts/validate.js",
+    "smoke": "bash scripts/smoke.sh"
+  },
+  "keywords": [
+    "agent-skill",
+    "audit",
+    "transcript",
+    "release-readiness",
+    "prompt-regression"
+  ],
+  "author": "Roger Chappel",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  }
+}

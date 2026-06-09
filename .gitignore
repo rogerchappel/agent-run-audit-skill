@@ -1,0 +1,4 @@
+node_modules/
+.audit/
+coverage/
+.DS_Store
