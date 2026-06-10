@@ -6,10 +6,21 @@
   "bin": {
     "agent-run-audit": "./bin/agent-run-audit.js"
   },
+  "files": [
+    "bin",
+    "src",
+    "docs",
+    "fixtures",
+    "README.md",
+    "LICENSE",
+    "SKILL.md"
+  ],
   "scripts": {
     "test": "node --test",
     "check": "node scripts/validate.js",
-    "smoke": "bash scripts/smoke.sh"
+    "smoke": "bash scripts/smoke.sh",
+    "package:smoke": "npm pack --dry-run",
+    "release:check": "npm run check && npm test && npm run smoke && npm run package:smoke"
   },
   "keywords": [
     "agent-skill",
@@ -20,6 +31,14 @@
   ],
   "author": "Roger Chappel",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rogerchappel/agent-run-audit-skill.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rogerchappel/agent-run-audit-skill/issues"
+  },
+  "homepage": "https://github.com/rogerchappel/agent-run-audit-skill#readme",
   "engines": {
     "node": ">=20"
   }
