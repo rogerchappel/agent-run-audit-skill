@@ -13,6 +13,9 @@
     "fixtures",
     "README.md",
     "LICENSE",
+    "SECURITY.md",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
     "SKILL.md"
   ],
   "scripts": {
