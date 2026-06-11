@@ -43,3 +43,15 @@ node bin/agent-run-audit.js check .audit/audit.json
 ## Safety Notes
 
 The CLI reads one transcript file and writes to the selected output directory. It does not execute transcript commands, mutate repositories, call GitHub, send notifications, or contact external services.
+
+## Release Readiness
+
+Run the local release gate before opening or publishing a release:
+
+```sh
+npm test
+npm run check
+npm run smoke
+npm run package:smoke
+npm run release:check
+```
