@@ -13,7 +13,12 @@
 npm test
 npm run check
 npm run smoke
+npm run package:smoke
+npm run release:check
 ```
+
+`package:smoke` must show the CLI bin, source files, docs, fixtures, skill file,
+license, and public support docs in the dry-run tarball contents.
 
 ## PR Review Focus
 
