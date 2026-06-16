@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { readFile } from "node:fs/promises";
+import pkg from "../package.json" with { type: "json" };
 import { auditTranscript, renderAuditMarkdown } from "../src/index.js";
 
 const [command, ...args] = process.argv.slice(2);
@@ -12,6 +13,11 @@ try {
 }
 
 async function main(command, args) {
+  if (command === "--version" || command === "version") {
+    console.log(pkg.version);
+    return;
+  }
+
   if (!command || command === "--help" || command === "help") {
     printHelp();
     return;
@@ -58,5 +64,6 @@ Usage:
   agent-run-audit audit <transcript> --out .audit
   agent-run-audit summarize .audit/audit.json
   agent-run-audit check .audit/audit.json
+  agent-run-audit --version
 `);
 }
