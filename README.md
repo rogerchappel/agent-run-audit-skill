@@ -34,6 +34,19 @@ node bin/agent-run-audit.js audit ./run.md --out .audit
 node bin/agent-run-audit.js check .audit/audit.json
 ```
 
+
+## Verification
+
+Run the local quality gates before opening a pull request:
+
+```sh
+npm run lint
+npm test
+npm run smoke
+```
+
+`npm run lint` is an alias for the repository static check so contributors can use the common npm workflow without guessing the project-specific command.
+
 ## Limitations
 
 - V1 uses heuristic extraction rather than a full shell parser.
