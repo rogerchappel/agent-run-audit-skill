@@ -19,8 +19,9 @@
     "SKILL.md"
   ],
   "scripts": {
-    "test": "node --test",
     "check": "node scripts/validate.js",
+    "lint": "node scripts/validate.js",
+    "test": "node --test",
     "smoke": "bash scripts/smoke.sh",
     "package:smoke": "node scripts/package-smoke.mjs",
     "release:check": "npm run check && npm test && npm run smoke && npm run package:smoke"
