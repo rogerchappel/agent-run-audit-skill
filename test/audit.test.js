@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -28,6 +29,14 @@ test("classifies external account side effects", async () => {
   const parsed = await parseTranscript("fixtures/external.md");
   const risks = classifySideEffects(parsed);
   assert.ok(risks.some((risk) => risk.type === "external-account" && risk.level === "high"));
+});
+
+test("cli help documents audit, summarize, and check commands", () => {
+  const output = execFileSync("node", ["bin/agent-run-audit.js", "--help"], { encoding: "utf8" });
+  assert.match(output, /Usage:/);
+  assert.match(output, /agent-run-audit audit/);
+  assert.match(output, /agent-run-audit summarize/);
+  assert.match(output, /agent-run-audit check/);
 });
 
 test("writes audit JSON and Markdown", async () => {
