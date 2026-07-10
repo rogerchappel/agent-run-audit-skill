@@ -4,6 +4,7 @@ set -euo pipefail
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 
+node bin/agent-run-audit.js --help > "$tmp/help.txt"
 node bin/agent-run-audit.js audit fixtures/success.md --out "$tmp/audit"
 test -f "$tmp/audit/audit.json"
 test -f "$tmp/audit/audit.md"
