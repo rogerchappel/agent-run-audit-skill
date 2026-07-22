@@ -9,7 +9,7 @@ export async function parseTranscript(file) {
     commands: extractCommands(lines),
     paths: extractPaths(lines),
     urls: extractUrls(lines),
-    blockers: extractMatching(lines, /\b(blocked|blocker|failed|error|cannot|can't)\b/i),
+    blockers: extractBlockers(lines),
     todos: extractMatching(lines, /\b(todo|follow[- ]?up|next step|remaining)\b/i),
     verification: extractMatching(lines, /\b(npm test|npm run|pytest|cargo test|passed|verification|smoke|check)\b/i)
   };
@@ -39,6 +39,11 @@ function extractPaths(lines) {
 
 function extractUrls(lines) {
   return unique(lines.flatMap((line) => [...line.matchAll(/https?:\/\/\S+/g)].map((match) => match[0].replace(/[),.]$/, ""))));
+}
+
+function extractBlockers(lines) {
+  const blockerPattern = /\b(blocked|blockers?|failed|error|cannot|can't)\b/i;
+  return lines.filter((line) => blockerPattern.test(line.replace(/\bno\s+(?:known\s+)?blockers?\b/gi, "")));
 }
 
 function extractMatching(lines, pattern) {

@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { execFileSync, spawnSync } from "node:child_process";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { auditTranscript, classifySideEffects, parseTranscript } from "../src/index.js";
@@ -22,6 +22,27 @@ test("classifies blocked runs", async () => {
     assert.equal(audit.summary.blockerCount, 1);
   } finally {
     await rm(out, { recursive: true, force: true });
+  }
+});
+
+test("classifies plural blocker headings without flagging resolved blockers", async () => {
+  const tmp = await mkdtemp(path.join(os.tmpdir(), "agent-run-audit-"));
+  const transcript = path.join(tmp, "transcript.md");
+  try {
+    await writeFile(transcript, "Blockers: production credentials are unavailable.\nVerification passed.\n");
+    const blocked = await auditTranscript(transcript, path.join(tmp, "blocked-audit"));
+    assert.equal(blocked.classification, "blocked");
+    assert.equal(blocked.summary.blockerCount, 1);
+
+    const check = spawnSync("node", ["bin/agent-run-audit.js", "check", path.join(tmp, "blocked-audit", "audit.json")]);
+    assert.notEqual(check.status, 0);
+
+    await writeFile(transcript, "No blockers remain.\nVerification passed.\n");
+    const ready = await auditTranscript(transcript, path.join(tmp, "ready-audit"));
+    assert.equal(ready.classification, "ready-for-handoff");
+    assert.equal(ready.summary.blockerCount, 0);
+  } finally {
+    await rm(tmp, { recursive: true, force: true });
   }
 });
 
