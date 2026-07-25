@@ -46,6 +46,45 @@ test("classifies plural blocker headings without flagging resolved blockers", as
   }
 });
 
+test("does not treat zero-failure summaries as blockers", async () => {
+  const parsed = await parseTranscript("fixtures/zero-failures.md");
+  assert.deepEqual(parsed.blockers, []);
+});
+
+test("does not treat explicitly resolved historical failures as blockers", async () => {
+  const parsed = await parseTranscript("fixtures/resolved-failure.md");
+  assert.deepEqual(parsed.blockers, []);
+});
+
+test("retains nonzero failures and active errors as blockers", async () => {
+  const failed = await parseTranscript("fixtures/active-failure.md");
+  assert.deepEqual(failed.blockers, ["npm test: 9 passed, 1 failed."]);
+
+  const errored = await parseTranscript("fixtures/active-error.md");
+  assert.deepEqual(errored.blockers, ["Error: release artifact is missing."]);
+});
+
+test("cli check accepts successful and resolved fixtures but rejects active failures", async () => {
+  const tmp = await mkdtemp(path.join(os.tmpdir(), "agent-run-audit-"));
+  try {
+    for (const fixture of ["zero-failures.md", "resolved-failure.md"]) {
+      const out = path.join(tmp, fixture);
+      execFileSync("node", ["bin/agent-run-audit.js", "audit", `fixtures/${fixture}`, "--out", out]);
+      const check = spawnSync("node", ["bin/agent-run-audit.js", "check", path.join(out, "audit.json")]);
+      assert.equal(check.status, 0, `${fixture} should pass CLI check`);
+    }
+
+    for (const fixture of ["active-failure.md", "active-error.md"]) {
+      const out = path.join(tmp, fixture);
+      execFileSync("node", ["bin/agent-run-audit.js", "audit", `fixtures/${fixture}`, "--out", out]);
+      const check = spawnSync("node", ["bin/agent-run-audit.js", "check", path.join(out, "audit.json")]);
+      assert.notEqual(check.status, 0, `${fixture} should fail CLI check`);
+    }
+  } finally {
+    await rm(tmp, { recursive: true, force: true });
+  }
+});
+
 test("classifies external account side effects", async () => {
   const parsed = await parseTranscript("fixtures/external.md");
   const risks = classifySideEffects(parsed);

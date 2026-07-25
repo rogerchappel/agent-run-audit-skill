@@ -43,7 +43,13 @@ function extractUrls(lines) {
 
 function extractBlockers(lines) {
   const blockerPattern = /\b(blocked|blockers?|failed|error|cannot|can't)\b/i;
-  return lines.filter((line) => blockerPattern.test(line.replace(/\bno\s+(?:known\s+)?blockers?\b/gi, "")));
+  return lines.filter((line) => {
+    const activeText = line
+      .replace(/\bno\s+(?:known\s+)?blockers?\b/gi, "")
+      .replace(/\b0\s+(?:tests?\s+)?failed\b/gi, "")
+      .replace(/\bpreviously\s+failed\b(?:\s*[,;:—-]\s*)?(?:but\s+)?now\s+(?:fixed|resolved|passing)\b/gi, "");
+    return blockerPattern.test(activeText);
+  });
 }
 
 function extractMatching(lines, pattern) {

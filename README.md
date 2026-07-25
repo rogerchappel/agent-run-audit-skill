@@ -25,6 +25,12 @@ agent-run-audit check .audit/audit.json
 
 `check` fails for blocked runs and high-risk external-account activity.
 
+Blocker detection is intentionally conservative and line-oriented. Active blocker
+keywords such as `blocked`, `failed`, `error`, and `cannot` are reported, while
+explicitly successful summaries (`0 failed`), resolved history (`Previously
+failed, now fixed`), and `No blockers` statements are ignored. Ambiguous history
+should be written with an explicit resolution; otherwise it remains a blocker.
+
 ## Examples
 
 Audit a cron transcript:
