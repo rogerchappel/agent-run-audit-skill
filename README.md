@@ -27,9 +27,10 @@ agent-run-audit check .audit/audit.json
 
 Blocker detection is intentionally conservative and line-oriented. Active blocker
 keywords such as `blocked`, `failed`, `error`, and `cannot` are reported, while
-explicitly successful summaries (`0 failed`), resolved history (`Previously
-failed, now fixed`), and `No blockers` statements are ignored. Ambiguous history
-should be written with an explicit resolution; otherwise it remains a blocker.
+explicitly successful summaries in count-first or count-last form (`0 failed` or
+`failed: 0`), resolved history (`Previously failed, now fixed`), and `No
+blockers` statements are ignored. Nonzero counts and ambiguous history remain
+blockers unless they include an explicit resolution.
 
 ## Examples
 
