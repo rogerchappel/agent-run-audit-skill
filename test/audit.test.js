@@ -47,8 +47,10 @@ test("classifies plural blocker headings without flagging resolved blockers", as
 });
 
 test("does not treat zero-failure summaries as blockers", async () => {
-  const parsed = await parseTranscript("fixtures/zero-failures.md");
-  assert.deepEqual(parsed.blockers, []);
+  for (const fixture of ["zero-failures.md", "zero-failures-count-last.md"]) {
+    const parsed = await parseTranscript(`fixtures/${fixture}`);
+    assert.deepEqual(parsed.blockers, [], fixture);
+  }
 });
 
 test("does not treat explicitly resolved historical failures as blockers", async () => {
@@ -67,7 +69,7 @@ test("retains nonzero failures and active errors as blockers", async () => {
 test("cli check accepts successful and resolved fixtures but rejects active failures", async () => {
   const tmp = await mkdtemp(path.join(os.tmpdir(), "agent-run-audit-"));
   try {
-    for (const fixture of ["zero-failures.md", "resolved-failure.md"]) {
+    for (const fixture of ["zero-failures.md", "zero-failures-count-last.md", "resolved-failure.md"]) {
       const out = path.join(tmp, fixture);
       execFileSync("node", ["bin/agent-run-audit.js", "audit", `fixtures/${fixture}`, "--out", out]);
       const check = spawnSync("node", ["bin/agent-run-audit.js", "check", path.join(out, "audit.json")]);
