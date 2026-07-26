@@ -47,6 +47,7 @@ function extractBlockers(lines) {
     const activeText = line
       .replace(/\bno\s+(?:known\s+)?blockers?\b/gi, "")
       .replace(/\b0\s+(?:tests?\s+)?failed\b/gi, "")
+      .replace(/\bfailed\s*:?\s*0\b/gi, "")
       .replace(/\bpreviously\s+failed\b(?:\s*[,;:—-]\s*)?(?:but\s+)?now\s+(?:fixed|resolved|passing)\b/gi, "");
     return blockerPattern.test(activeText);
   });
