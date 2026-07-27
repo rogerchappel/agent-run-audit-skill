@@ -14,6 +14,19 @@ test("extracts commands, paths, URLs, and verification", async () => {
   assert.ok(parsed.verification.some((line) => line.includes("passed")));
 });
 
+test("extracts standalone repository filenames without treating prose as paths", async () => {
+  const parsed = await parseTranscript("fixtures/standalone-files.md");
+  assert.deepEqual(parsed.paths, ["README.md", "package.json"]);
+
+  const tmp = await mkdtemp(path.join(os.tmpdir(), "agent-run-audit-"));
+  try {
+    const audit = await auditTranscript("fixtures/standalone-files.md", tmp);
+    assert.equal(audit.summary.pathCount, 2);
+  } finally {
+    await rm(tmp, { recursive: true, force: true });
+  }
+});
+
 test("classifies blocked runs", async () => {
   const out = await mkdtemp(path.join(os.tmpdir(), "agent-run-audit-"));
   try {
@@ -91,6 +104,33 @@ test("classifies external account side effects", async () => {
   const parsed = await parseTranscript("fixtures/external.md");
   const risks = classifySideEffects(parsed);
   assert.ok(risks.some((risk) => risk.type === "external-account" && risk.level === "high"));
+});
+
+test("ignores explicitly negated external-account activity", async () => {
+  const tmp = await mkdtemp(path.join(os.tmpdir(), "agent-run-audit-"));
+  try {
+    const audit = await auditTranscript("fixtures/external-negated.md", tmp);
+    assert.equal(audit.sideEffects.some((risk) => risk.type === "external-account"), false);
+    assert.equal(audit.classification, "ready-for-handoff");
+
+    const check = spawnSync("node", ["bin/agent-run-audit.js", "check", path.join(tmp, "audit.json")]);
+    assert.equal(check.status, 0);
+  } finally {
+    await rm(tmp, { recursive: true, force: true });
+  }
+});
+
+test("cli check rejects affirmative external-account activity", async () => {
+  const tmp = await mkdtemp(path.join(os.tmpdir(), "agent-run-audit-"));
+  try {
+    const audit = await auditTranscript("fixtures/external.md", tmp);
+    assert.ok(audit.sideEffects.some((risk) => risk.type === "external-account" && risk.level === "high"));
+
+    const check = spawnSync("node", ["bin/agent-run-audit.js", "check", path.join(tmp, "audit.json")]);
+    assert.notEqual(check.status, 0);
+  } finally {
+    await rm(tmp, { recursive: true, force: true });
+  }
 });
 
 test("cli help documents audit, summarize, and check commands", () => {
