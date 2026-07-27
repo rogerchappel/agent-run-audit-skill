@@ -25,12 +25,23 @@ agent-run-audit check .audit/audit.json
 
 `check` fails for blocked runs and high-risk external-account activity.
 
+File extraction recognizes directory-qualified paths and standalone filenames
+with common repository extensions (for example, `README.md`, `package.json`,
+and `index.js`). The extension allowlist is deliberately narrow: uncommon
+extensions and extensionless filenames without a directory may be omitted to
+avoid treating ordinary dotted prose as files.
+
 Blocker detection is intentionally conservative and line-oriented. Active blocker
 keywords such as `blocked`, `failed`, `error`, and `cannot` are reported, while
 explicitly successful summaries in count-first or count-last form (`0 failed` or
 `failed: 0`), resolved history (`Previously failed, now fixed`), and `No
 blockers` statements are ignored. Nonzero counts and ambiguous history remain
 blockers unless they include an explicit resolution.
+
+External-account detection is also line-oriented. Slack and common account
+services, sending, and posting are high-risk unless the containing clause
+explicitly negates the activity (for example, `No Slack message was sent`).
+Indirect or unusually phrased negation may still require manual review.
 
 ## Examples
 
