@@ -33,7 +33,12 @@ function extractCommands(lines) {
 }
 
 function extractPaths(lines) {
-  const matches = lines.flatMap((line) => [...line.matchAll(/(?:\.{0,2}\/)?[\w.-]+(?:\/[\w.@-]+)+/g)].map((match) => match[0]));
+  const pathWithDirectory = /(?:\.{0,2}\/)?[\w.-]+(?:\/[\w.@-]+)+/g;
+  const standaloneFile = /\b[\w@-]+\.(?:cjs|css|go|html|java|js|json|jsx|kt|md|mjs|py|rb|rs|scss|sh|swift|toml|ts|tsx|yaml|yml)\b/gi;
+  const matches = lines.flatMap((line) => [
+    ...[...line.matchAll(pathWithDirectory)].map((match) => match[0]),
+    ...[...line.matchAll(standaloneFile)].map((match) => match[0])
+  ]);
   return unique(matches.filter((item) => !item.startsWith("http")));
 }
 
