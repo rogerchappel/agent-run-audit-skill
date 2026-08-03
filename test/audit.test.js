@@ -14,6 +14,17 @@ test("extracts commands, paths, URLs, and verification", async () => {
   assert.ok(parsed.verification.some((line) => line.includes("passed")));
 });
 
+test("extracts punctuated paths without URL-derived substrings", async () => {
+  const parsed = await parseTranscript("fixtures/punctuated-paths.md");
+  assert.deepEqual(parsed.paths, [
+    "src/index.js",
+    "docs/README.md",
+    "test/audit.test.js",
+    "package.json"
+  ]);
+  assert.deepEqual(parsed.urls, ["https://github.com/rogerchappel/example/pull/1"]);
+});
+
 test("extracts standalone repository filenames without treating prose as paths", async () => {
   const parsed = await parseTranscript("fixtures/standalone-files.md");
   assert.deepEqual(parsed.paths, ["README.md", "package.json"]);

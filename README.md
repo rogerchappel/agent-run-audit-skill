@@ -29,7 +29,9 @@ File extraction recognizes directory-qualified paths and standalone filenames
 with common repository extensions (for example, `README.md`, `package.json`,
 and `index.js`). The extension allowlist is deliberately narrow: uncommon
 extensions and extensionless filenames without a directory may be omitted to
-avoid treating ordinary dotted prose as files.
+avoid treating ordinary dotted prose as files. URL contents are excluded from
+path results, and sentence punctuation immediately after a path is not part of
+that path; URLs continue to be reported separately.
 
 Blocker detection is intentionally conservative and line-oriented. Active blocker
 keywords such as `blocked`, `failed`, `error`, and `cannot` are reported, while
