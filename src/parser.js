@@ -35,11 +35,20 @@ function extractCommands(lines) {
 function extractPaths(lines) {
   const pathWithDirectory = /(?:\.{0,2}\/)?[\w.-]+(?:\/[\w.@-]+)+/g;
   const standaloneFile = /\b[\w@-]+\.(?:cjs|css|go|html|java|js|json|jsx|kt|md|mjs|py|rb|rs|scss|sh|swift|toml|ts|tsx|yaml|yml)\b/gi;
-  const matches = lines.flatMap((line) => [
-    ...[...line.matchAll(pathWithDirectory)].map((match) => match[0]),
-    ...[...line.matchAll(standaloneFile)].map((match) => match[0])
-  ]);
-  return unique(matches.filter((item) => !item.startsWith("http")));
+  const matches = lines.flatMap((line) => {
+    const pathText = line.replace(/https?:\/\/\S+/g, (url) => " ".repeat(url.length));
+    const directoryMatches = [...pathText.matchAll(pathWithDirectory)];
+    const standaloneMatches = [...pathText.matchAll(standaloneFile)].filter((candidate) =>
+      !directoryMatches.some((directory) =>
+        candidate.index >= directory.index && candidate.index < directory.index + directory[0].length
+      )
+    );
+
+    return [...directoryMatches, ...standaloneMatches]
+      .sort((left, right) => left.index - right.index)
+      .map((match) => match[0].replace(/[.,;:!?]+$/, ""));
+  });
+  return unique(matches);
 }
 
 function extractUrls(lines) {
