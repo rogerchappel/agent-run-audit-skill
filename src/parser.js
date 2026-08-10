@@ -11,7 +11,7 @@ export async function parseTranscript(file) {
     urls: extractUrls(lines),
     blockers: extractBlockers(lines),
     todos: extractMatching(lines, /\b(todo|follow[- ]?up|next step|remaining)\b/i),
-    verification: extractMatching(lines, /\b(npm test|npm run|pytest|cargo test|passed|verification|smoke|check)\b/i)
+    verification: extractVerification(lines)
   };
 }
 
@@ -62,9 +62,17 @@ function extractBlockers(lines) {
       .replace(/\bno\s+(?:known\s+)?blockers?\b/gi, "")
       .replace(/\b0\s+(?:tests?\s+)?failed\b/gi, "")
       .replace(/\bfailed\s*:?\s*0\b/gi, "")
+      .replace(/\bno\s+(?:[\w-]+\s+){0,3}(?:errors?|failures?)\s+(?:occurred|were found|were detected)\b/gi, "")
+      .replace(/\b(?:the\s+)?(?:[\w-]+\s+){0,3}(?:errors?|failures?)\s+(?:was|were|is|are|has been|have been)\s+(?:fixed|resolved)\b/gi, "")
       .replace(/\bpreviously\s+failed\b(?:\s*[,;:—-]\s*)?(?:but\s+)?now\s+(?:fixed|resolved|passing)\b/gi, "");
     return blockerPattern.test(activeText);
   });
+}
+
+function extractVerification(lines) {
+  const evidencePattern = /\b(npm test|npm run|pytest|cargo test|passed|verification|smoke|check)\b/i;
+  const nonExecutionPattern = /(?:\b(?:verification|checks?|tests?|smoke)(?:\s+\w+){0,3}\s+(?:was|were|is|are|has been|have been)\s+not\s+(?:performed|run|executed|completed)\b|\b(?:did|was|were)\s+not\s+(?:perform|run|execute|complete)\b|\bno\s+(?:verification|checks?|tests?|smoke)\s+(?:was|were)\s+(?:performed|run|executed|completed)\b)/i;
+  return lines.filter((line) => evidencePattern.test(line) && !nonExecutionPattern.test(line));
 }
 
 function extractMatching(lines, pattern) {

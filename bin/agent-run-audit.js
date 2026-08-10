@@ -42,7 +42,7 @@ async function main(command, args) {
     const auditPath = args[0];
     if (!auditPath) throw new Error("Usage: agent-run-audit check <audit.json>");
     const audit = JSON.parse(await readFile(auditPath, "utf8"));
-    if (audit.classification === "blocked" || audit.classification === "needs-review") {
+    if (audit.classification !== "ready-for-handoff") {
       throw new Error(`Audit requires attention: ${audit.classification}`);
     }
     console.log(`Audit check passed: ${audit.classification}`);
