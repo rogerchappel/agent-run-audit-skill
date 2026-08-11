@@ -33,7 +33,9 @@
 
 ## Classifications
 
-- `ready-for-handoff`: verification exists and no blockers or high-risk external-account side effects were found.
-- `missing-verification`: no verification statement was detected.
+- `ready-for-handoff`: affirmative verification evidence exists and no blockers or high-risk external-account side effects were found.
+- `missing-verification`: no affirmative verification evidence was detected. Statements that a check was not run or verification was not performed do not count as evidence.
 - `needs-review`: high-risk external-account side effects were detected.
-- `blocked`: blocker or failure language was detected.
+- `blocked`: affirmative blocker or failure language was detected. Explicitly negated or resolved errors do not create blockers.
+
+The `check` command succeeds only for `ready-for-handoff`; every other classification exits nonzero.

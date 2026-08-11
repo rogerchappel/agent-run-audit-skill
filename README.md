@@ -23,7 +23,8 @@ agent-run-audit summarize .audit/audit.json
 agent-run-audit check .audit/audit.json
 ```
 
-`check` fails for blocked runs and high-risk external-account activity.
+`check` succeeds only for runs classified as `ready-for-handoff`. Blocked,
+high-risk, and missing-verification runs exit nonzero.
 
 File extraction recognizes directory-qualified paths and standalone filenames
 with common repository extensions (for example, `README.md`, `package.json`,
@@ -39,6 +40,10 @@ explicitly successful summaries in count-first or count-last form (`0 failed` or
 `failed: 0`), resolved history (`Previously failed, now fixed`), and `No
 blockers` statements are ignored. Nonzero counts and ambiguous history remain
 blockers unless they include an explicit resolution.
+
+Verification detection likewise requires affirmative evidence. Statements such
+as `Verification was not performed` and `The release check was not run` are
+classified as missing verification instead of successful handoff evidence.
 
 External-account detection is also line-oriented. Slack and common account
 services, sending, and posting are high-risk unless the containing clause
