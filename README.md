@@ -44,6 +44,9 @@ blockers unless they include an explicit resolution.
 Verification detection likewise requires affirmative evidence. Statements such
 as `Verification was not performed` and `The release check was not run` are
 classified as missing verification instead of successful handoff evidence.
+Prospective, planned, or conditional statements such as `npm test will be run
+after review` are also not completed evidence. Report an observed result, for
+example `npm test passed`, before expecting `check` to approve the audit.
 
 External-account detection is also line-oriented. Slack and common account
 services, sending, and posting are high-risk unless the containing clause
