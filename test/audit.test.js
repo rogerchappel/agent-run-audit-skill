@@ -19,6 +19,18 @@ test("does not count explicitly non-executed checks as verification", async () =
   assert.deepEqual(parsed.verification, []);
 });
 
+test("does not count prospective checks as completed verification", async () => {
+  const parsed = await parseTranscript("fixtures/prospective-verification.md");
+  assert.deepEqual(parsed.verification, []);
+});
+
+test("retains affirmative completed verification evidence", async () => {
+  const parsed = await parseTranscript("fixtures/success.md");
+  assert.equal(parsed.verification.length, 2);
+  assert.ok(parsed.verification.includes("Ran `npm test` and `npm run smoke`."));
+  assert.ok(parsed.verification.includes("Verification passed: npm test reported 6 passing tests."));
+});
+
 test("extracts punctuated paths without URL-derived substrings", async () => {
   const parsed = await parseTranscript("fixtures/punctuated-paths.md");
   assert.deepEqual(parsed.paths, [
@@ -49,6 +61,17 @@ test("classifies blocked runs", async () => {
     const audit = await auditTranscript("fixtures/blocked.md", out);
     assert.equal(audit.classification, "blocked");
     assert.equal(audit.summary.blockerCount, 1);
+  } finally {
+    await rm(out, { recursive: true, force: true });
+  }
+});
+
+test("classifies prospective-only verification as missing", async () => {
+  const out = await mkdtemp(path.join(os.tmpdir(), "agent-run-audit-"));
+  try {
+    const audit = await auditTranscript("fixtures/prospective-verification.md", out);
+    assert.equal(audit.classification, "missing-verification");
+    assert.equal(audit.summary.verificationCount, 0);
   } finally {
     await rm(out, { recursive: true, force: true });
   }
@@ -113,7 +136,7 @@ test("cli check accepts successful and resolved fixtures but rejects active fail
       assert.equal(check.status, 0, `${fixture} should pass CLI check`);
     }
 
-    for (const fixture of ["active-failure.md", "active-error.md", "negated-verification.md"]) {
+    for (const fixture of ["active-failure.md", "active-error.md", "negated-verification.md", "prospective-verification.md"]) {
       const out = path.join(tmp, fixture);
       execFileSync("node", ["bin/agent-run-audit.js", "audit", `fixtures/${fixture}`, "--out", out]);
       const check = spawnSync("node", ["bin/agent-run-audit.js", "check", path.join(out, "audit.json")]);
