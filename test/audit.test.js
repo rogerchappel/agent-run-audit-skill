@@ -194,6 +194,25 @@ test("cli help documents audit, summarize, and check commands", () => {
   assert.match(output, /agent-run-audit check/);
 });
 
+test("cli rejects malformed arguments with command usage", () => {
+  const cases = [
+    ["audit", "fixtures/success.md", "--out"],
+    ["audit", "fixtures/success.md", "--unknown", "value"],
+    ["audit", "fixtures/success.md", "--out", ".audit-one", "--out", ".audit-two"],
+    ["audit", "fixtures/success.md", "extra.md"],
+    ["summarize", ".audit/audit.json", "--unknown"],
+    ["summarize", ".audit/audit.json", "extra.json"],
+    ["check", ".audit/audit.json", "--unknown"],
+    ["check", ".audit/audit.json", "extra.json"]
+  ];
+
+  for (const args of cases) {
+    const result = spawnSync("node", ["bin/agent-run-audit.js", ...args], { encoding: "utf8" });
+    assert.notEqual(result.status, 0, args.join(" "));
+    assert.match(result.stderr, new RegExp(`Usage: agent-run-audit ${args[0]}`), args.join(" "));
+  }
+});
+
 test("writes audit JSON and Markdown", async () => {
   const out = await mkdtemp(path.join(os.tmpdir(), "agent-run-audit-"));
   try {
