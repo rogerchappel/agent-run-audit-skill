@@ -26,9 +26,15 @@ test("does not count prospective checks as completed verification", async () => 
 
 test("retains affirmative completed verification evidence", async () => {
   const parsed = await parseTranscript("fixtures/success.md");
-  assert.equal(parsed.verification.length, 2);
-  assert.ok(parsed.verification.includes("Ran `npm test` and `npm run smoke`."));
+  assert.equal(parsed.verification.length, 1);
   assert.ok(parsed.verification.includes("Verification passed: npm test reported 6 passing tests."));
+});
+
+test("does not count a bare command or command mention as completed verification", async () => {
+  for (const fixture of ["command-only-verification.md", "command-mentioned-verification.md"]) {
+    const parsed = await parseTranscript(`fixtures/${fixture}`);
+    assert.deepEqual(parsed.verification, [], fixture);
+  }
 });
 
 test("extracts punctuated paths without URL-derived substrings", async () => {
@@ -136,7 +142,7 @@ test("cli check accepts successful and resolved fixtures but rejects active fail
       assert.equal(check.status, 0, `${fixture} should pass CLI check`);
     }
 
-    for (const fixture of ["active-failure.md", "active-error.md", "negated-verification.md", "prospective-verification.md"]) {
+    for (const fixture of ["active-failure.md", "active-error.md", "negated-verification.md", "prospective-verification.md", "command-only-verification.md", "command-mentioned-verification.md"]) {
       const out = path.join(tmp, fixture);
       execFileSync("node", ["bin/agent-run-audit.js", "audit", `fixtures/${fixture}`, "--out", out]);
       const check = spawnSync("node", ["bin/agent-run-audit.js", "check", path.join(out, "audit.json")]);
