@@ -23,6 +23,10 @@ agent-run-audit summarize .audit/audit.json
 agent-run-audit check .audit/audit.json
 ```
 
+Each command accepts exactly the paths and options shown above. `audit` may
+omit `--out` to use `.audit`; unknown or duplicate flags, a missing `--out`
+value, and extra positional arguments are usage errors.
+
 `check` succeeds only for runs classified as `ready-for-handoff`. Blocked,
 high-risk, and missing-verification runs exit nonzero.
 
@@ -45,8 +49,10 @@ Verification detection likewise requires affirmative evidence. Statements such
 as `Verification was not performed` and `The release check was not run` are
 classified as missing verification instead of successful handoff evidence.
 Prospective, planned, or conditional statements such as `npm test will be run
-after review` are also not completed evidence. Report an observed result, for
-example `npm test passed`, before expecting `check` to approve the audit.
+after review` are also not completed evidence. A bare command (`npm test`) or
+a mention of a recommended command only proves that the command was named, not
+that it ran successfully. Report an observed result, for example `npm test
+passed`, before expecting `check` to approve the audit.
 
 External-account detection is also line-oriented. Slack and common account
 services, sending, and posting are high-risk unless the containing clause

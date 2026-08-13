@@ -29,6 +29,11 @@ Ask before:
 3. Run `agent-run-audit check .audit/audit.json`.
 4. Resolve blockers or high-risk side effects before treating the run as ready.
 
+`check` requires an explicit observed successful result in the transcript. A
+bare command or a recommendation to run a command is not verification evidence.
+CLI invocations reject unknown or duplicate flags, missing option values, and
+unexpected positional arguments.
+
 ## Validation
 
 ```bash
