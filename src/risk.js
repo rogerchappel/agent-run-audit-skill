@@ -13,10 +13,15 @@ export function classifySideEffects(parsed) {
 }
 
 function hasExternalAccountActivity(commands, lines) {
-  const activity = /\b(?:slack|gmail|salesforce|hubspot|stripe|send|sent|sending|post(?:ed|ing)?\s+to)\b/i;
+  const accountService = /\b(?:slack|gmail|salesforce|hubspot|stripe)\b/i;
+  const transfer = /\b(?:send|sent|sending|post|posted|posting)\b/i;
+  const externalDestination = /\b(?:e-?mail|message|notification|webhook|channel|customer|client|user|external (?:account|service))s?\b/i;
   const explicitNegation = /(?:\b(?:no|never|without)\b.*\b(?:slack|gmail|salesforce|hubspot|stripe|send|sent|sending|post(?:ed|ing)?|external account)\b)|(?:\b(?:slack|gmail|salesforce|hubspot|stripe|send|sent|sending|post(?:ed|ing)?|external account)\b.*\b(?:was|were|is|are|did|does|has|have)\s+not\b)/i;
   const clauses = [...commands, ...lines].flatMap((line) => line.split(/[.;]/));
-  return clauses.some((clause) => activity.test(clause) && !explicitNegation.test(clause));
+  return clauses.some((clause) => {
+    const activity = accountService.test(clause) || (transfer.test(clause) && externalDestination.test(clause));
+    return activity && !explicitNegation.test(clause);
+  });
 }
 
 function addRisk(risks, type, present) {
