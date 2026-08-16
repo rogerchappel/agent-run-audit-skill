@@ -54,10 +54,14 @@ a mention of a recommended command only proves that the command was named, not
 that it ran successfully. Report an observed result, for example `npm test
 passed`, before expecting `check` to approve the audit.
 
-External-account detection is also line-oriented. Slack and common account
-services, sending, and posting are high-risk unless the containing clause
-explicitly negates the activity (for example, `No Slack message was sent`).
-Indirect or unusually phrased negation may still require manual review.
+External-account detection is also line-oriented. Affirmative references to
+Slack and common account services are high-risk. Generic sending and posting
+language is high-risk only when the clause also names an external destination,
+such as an email, message, webhook, channel, customer, or external account;
+explicitly local destinations such as a local file or stdout are not. A clause
+that explicitly negates the activity (for example, `No Slack message was sent`)
+is also ignored. Indirect or unusually phrased activity or negation may still
+require manual review.
 
 ## Examples
 

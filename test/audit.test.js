@@ -154,9 +154,28 @@ test("cli check accepts successful and resolved fixtures but rejects active fail
 });
 
 test("classifies external account side effects", async () => {
-  const parsed = await parseTranscript("fixtures/external.md");
-  const risks = classifySideEffects(parsed);
-  assert.ok(risks.some((risk) => risk.type === "external-account" && risk.level === "high"));
+  for (const fixture of ["external.md", "external-affirmative.md"]) {
+    const parsed = await parseTranscript(`fixtures/${fixture}`);
+    const risks = classifySideEffects(parsed);
+    assert.ok(
+      risks.some((risk) => risk.type === "external-account" && risk.level === "high"),
+      `${fixture} should identify external-account activity`
+    );
+  }
+});
+
+test("ignores sends to explicitly local destinations", async () => {
+  const tmp = await mkdtemp(path.join(os.tmpdir(), "agent-run-audit-"));
+  try {
+    const audit = await auditTranscript("fixtures/external-local-destination.md", tmp);
+    assert.equal(audit.sideEffects.some((risk) => risk.type === "external-account"), false);
+    assert.equal(audit.classification, "ready-for-handoff");
+
+    const check = spawnSync("node", ["bin/agent-run-audit.js", "check", path.join(tmp, "audit.json")]);
+    assert.equal(check.status, 0);
+  } finally {
+    await rm(tmp, { recursive: true, force: true });
+  }
 });
 
 test("ignores explicitly negated external-account activity", async () => {
