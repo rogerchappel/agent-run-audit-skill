@@ -31,6 +31,8 @@ Ask before:
 
 `check` requires an explicit observed successful result in the transcript. A
 bare command or a recommendation to run a command is not verification evidence.
+Negated outcomes such as `npm test was not successful` are not verification
+evidence either.
 CLI invocations reject unknown or duplicate flags, missing option values, and
 unexpected positional arguments.
 

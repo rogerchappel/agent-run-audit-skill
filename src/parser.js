@@ -72,9 +72,13 @@ function extractBlockers(lines) {
 function extractVerification(lines) {
   const evidencePattern = /(?:\b(?:passed|passing|succeeded|successful)\b|\b(?:verification|checks?|tests?|smoke)\b[^.]*\bcompleted\b|\b(?:completed|finished)\b[^.]*\b(?:verification|checks?|tests?|smoke)\b)/i;
   const nonExecutionPattern = /(?:\b(?:verification|checks?|tests?|smoke)(?:\s+\w+){0,3}\s+(?:was|were|is|are|has been|have been)\s+not\s+(?:performed|run|executed|completed)\b|\b(?:did|was|were)\s+not\s+(?:perform|run|execute|complete)\b|\bno\s+(?:verification|checks?|tests?|smoke)\s+(?:was|were)\s+(?:performed|run|executed|completed)\b)/i;
+  const unsuccessfulOutcomePattern = /\b(?:was|were|is|are|has|have|had)\s+not\s+(?:been\s+)?(?:passed|passing|succeeded|successful)\b/i;
   const prospectivePattern = /(?:\b(?:will|would|should|could|can|may|might|must)\s+(?:still\s+)?(?:be\s+)?(?:performed|run|executed|completed|pass(?:ed)?)\b|\b(?:plan(?:ned)?|intend(?:ed)?|expect(?:ed)?|schedule(?:d)?)\s+to\s+(?:perform|run|execute|complete)\b|\b(?:verification|checks?|tests?|smoke|npm test|npm run|pytest|cargo test)\b[^.]*\b(?:pending|planned|scheduled|after (?:review|approval))\b|\b(?:to be|yet to be)\s+(?:performed|run|executed|completed)\b)/i;
   return lines.filter((line) =>
-    evidencePattern.test(line) && !nonExecutionPattern.test(line) && !prospectivePattern.test(line)
+    evidencePattern.test(line) &&
+    !nonExecutionPattern.test(line) &&
+    !unsuccessfulOutcomePattern.test(line) &&
+    !prospectivePattern.test(line)
   );
 }
 
