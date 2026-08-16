@@ -46,8 +46,10 @@ blockers` statements are ignored. Nonzero counts and ambiguous history remain
 blockers unless they include an explicit resolution.
 
 Verification detection likewise requires affirmative evidence. Statements such
-as `Verification was not performed` and `The release check was not run` are
-classified as missing verification instead of successful handoff evidence.
+as `Verification was not performed`, `The release check was not run`, and `npm
+test was not successful` are classified as missing verification instead of
+successful handoff evidence. Negating a positive outcome word (`not passed`,
+`not passing`, `not succeeded`, or `not successful`) never counts as evidence.
 Prospective, planned, or conditional statements such as `npm test will be run
 after review` are also not completed evidence. A bare command (`npm test`) or
 a mention of a recommended command only proves that the command was named, not
