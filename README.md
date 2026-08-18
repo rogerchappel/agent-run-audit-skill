@@ -56,6 +56,12 @@ a mention of a recommended command only proves that the command was named, not
 that it ran successfully. Report an observed result, for example `npm test
 passed`, before expecting `check` to approve the audit.
 
+When a transcript contains multiple outcomes, their order resolves recency.
+An explicit later failure or statement that verification was not run clears
+earlier success evidence. A later observed success after historical failure
+becomes the current verification evidence. Prospective statements remain
+neutral: they neither prove success nor erase an already observed result.
+
 External-account detection is also line-oriented. Affirmative references to
 Slack and common account services are high-risk. Generic sending and posting
 language is high-risk only when the clause also names an external destination,
