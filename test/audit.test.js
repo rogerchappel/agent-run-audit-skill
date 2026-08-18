@@ -38,6 +38,16 @@ test("retains affirmative completed verification evidence", async () => {
   assert.equal(outcomes.verification.length, 4);
 });
 
+test("uses the latest explicit verification outcome", async () => {
+  for (const fixture of ["historical-pass-current-not-run.md", "historical-pass-current-failure.md"]) {
+    const parsed = await parseTranscript(`fixtures/${fixture}`);
+    assert.deepEqual(parsed.verification, [], fixture);
+  }
+
+  const recovered = await parseTranscript("fixtures/historical-failure-current-pass.md");
+  assert.deepEqual(recovered.verification, ["npm test passed for the current change."]);
+});
+
 test("does not count a bare command or command mention as completed verification", async () => {
   for (const fixture of ["command-only-verification.md", "command-mentioned-verification.md"]) {
     const parsed = await parseTranscript(`fixtures/${fixture}`);
@@ -143,14 +153,14 @@ test("ignores negated and resolved errors while retaining successful verificatio
 test("cli check accepts successful and resolved fixtures but rejects active failures", async () => {
   const tmp = await mkdtemp(path.join(os.tmpdir(), "agent-run-audit-"));
   try {
-    for (const fixture of ["zero-failures.md", "zero-failures-count-last.md", "resolved-failure.md", "negated-error.md", "resolved-error.md", "affirmative-outcome-verification.md"]) {
+    for (const fixture of ["zero-failures.md", "zero-failures-count-last.md", "resolved-failure.md", "negated-error.md", "resolved-error.md", "affirmative-outcome-verification.md", "historical-failure-current-pass.md"]) {
       const out = path.join(tmp, fixture);
       execFileSync("node", ["bin/agent-run-audit.js", "audit", `fixtures/${fixture}`, "--out", out]);
       const check = spawnSync("node", ["bin/agent-run-audit.js", "check", path.join(out, "audit.json")]);
       assert.equal(check.status, 0, `${fixture} should pass CLI check`);
     }
 
-    for (const fixture of ["active-failure.md", "active-error.md", "negated-verification.md", "negated-outcome-verification.md", "prospective-verification.md", "command-only-verification.md", "command-mentioned-verification.md"]) {
+    for (const fixture of ["active-failure.md", "active-error.md", "negated-verification.md", "negated-outcome-verification.md", "prospective-verification.md", "command-only-verification.md", "command-mentioned-verification.md", "historical-pass-current-not-run.md", "historical-pass-current-failure.md"]) {
       const out = path.join(tmp, fixture);
       execFileSync("node", ["bin/agent-run-audit.js", "audit", `fixtures/${fixture}`, "--out", out]);
       const check = spawnSync("node", ["bin/agent-run-audit.js", "check", path.join(out, "audit.json")]);
