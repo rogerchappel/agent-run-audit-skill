@@ -33,6 +33,9 @@ Ask before:
 bare command or a recommendation to run a command is not verification evidence.
 Negated outcomes such as `npm test was not successful` are not verification
 evidence either.
+Later explicit outcomes supersede earlier ones: a current failure or non-run
+clears historical success, while a current observed pass supersedes historical
+failure. Planned checks do not change the last observed outcome.
 CLI invocations reject unknown or duplicate flags, missing option values, and
 unexpected positional arguments.
 
