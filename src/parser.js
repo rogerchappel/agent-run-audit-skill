@@ -57,7 +57,12 @@ function extractUrls(lines) {
 
 function extractBlockers(lines) {
   const blockerPattern = /\b(blocked|blockers?|failed|error|cannot|can't)\b/i;
-  return lines.filter((line) => {
+  const verification = extractVerification(lines);
+  const latestVerificationIndex = verification.length ? lines.lastIndexOf(verification.at(-1)) : -1;
+  const verificationFailurePattern = /\b(?:verification|checks?|tests?|smoke|npm test|npm run|pytest|cargo test)\b[^.]*\b(?:failed|failure|errored|unsuccessful)\b/i;
+
+  return lines.filter((line, index) => {
+    if (index < latestVerificationIndex && verificationFailurePattern.test(line)) return false;
     const activeText = line
       .replace(/\bno\s+(?:known\s+)?blockers?\b/gi, "")
       .replace(/\b0\s+(?:tests?\s+)?failed\b/gi, "")
@@ -73,13 +78,39 @@ function extractVerification(lines) {
   const evidencePattern = /(?:\b(?:passed|passing|succeeded|successful)\b|\b(?:verification|checks?|tests?|smoke)\b[^.]*\bcompleted\b|\b(?:completed|finished)\b[^.]*\b(?:verification|checks?|tests?|smoke)\b)/i;
   const nonExecutionPattern = /(?:\b(?:verification|checks?|tests?|smoke)(?:\s+\w+){0,3}\s+(?:was|were|is|are|has been|have been)\s+not\s+(?:performed|run|executed|completed)\b|\b(?:did|was|were)\s+not\s+(?:perform|run|execute|complete)\b|\bno\s+(?:verification|checks?|tests?|smoke)\s+(?:was|were)\s+(?:performed|run|executed|completed)\b)/i;
   const unsuccessfulOutcomePattern = /\b(?:was|were|is|are|has|have|had)\s+not\s+(?:been\s+)?(?:passed|passing|succeeded|successful)\b/i;
+  const failedOutcomePattern = /\b(?:verification|checks?|tests?|smoke|npm test|npm run|pytest|cargo test)\b[^.]*\b(?:failed|failure|errored|unsuccessful)\b/i;
   const prospectivePattern = /(?:\b(?:will|would|should|could|can|may|might|must)\s+(?:still\s+)?(?:be\s+)?(?:performed|run|executed|completed|pass(?:ed)?)\b|\b(?:plan(?:ned)?|intend(?:ed)?|expect(?:ed)?|schedule(?:d)?)\s+to\s+(?:perform|run|execute|complete)\b|\b(?:verification|checks?|tests?|smoke|npm test|npm run|pytest|cargo test)\b[^.]*\b(?:pending|planned|scheduled|after (?:review|approval))\b|\b(?:to be|yet to be)\s+(?:performed|run|executed|completed)\b)/i;
-  return lines.filter((line) =>
-    evidencePattern.test(line) &&
-    !nonExecutionPattern.test(line) &&
-    !unsuccessfulOutcomePattern.test(line) &&
-    !prospectivePattern.test(line)
-  );
+  const evidence = [];
+
+  for (const line of lines) {
+    if (prospectivePattern.test(line)) continue;
+
+    const positiveAt = lastMatchIndex(line, evidencePattern);
+    const negativeAt = Math.max(
+      lastMatchIndex(line, nonExecutionPattern),
+      lastMatchIndex(line, unsuccessfulOutcomePattern),
+      lastMatchIndex(line, failedOutcomePattern)
+    );
+
+    // Transcript order is the deterministic recency signal. A later explicit
+    // non-run or failed outcome supersedes all earlier success evidence; a
+    // later observed success starts a new current evidence set.
+    if (nonExecutionPattern.test(line) || unsuccessfulOutcomePattern.test(line)) {
+      evidence.length = 0;
+    } else if (negativeAt > positiveAt) {
+      evidence.length = 0;
+    } else if (positiveAt >= 0 && positiveAt > negativeAt) {
+      evidence.push(line);
+    }
+  }
+
+  return evidence;
+}
+
+function lastMatchIndex(value, pattern) {
+  const flags = pattern.flags.includes("g") ? pattern.flags : `${pattern.flags}g`;
+  const matches = [...value.matchAll(new RegExp(pattern.source, flags))];
+  return matches.length ? matches.at(-1).index : -1;
 }
 
 function extractMatching(lines, pattern) {
