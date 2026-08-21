@@ -123,10 +123,20 @@ test("classifies plural blocker headings without flagging resolved blockers", as
 });
 
 test("does not treat zero-failure summaries as blockers", async () => {
-  for (const fixture of ["zero-failures.md", "zero-failures-count-last.md"]) {
+  for (const fixture of ["zero-failures.md", "zero-failures-count-last.md", "affirmative-zero-failures.md"]) {
     const parsed = await parseTranscript(`fixtures/${fixture}`);
     assert.deepEqual(parsed.blockers, [], fixture);
   }
+});
+
+test("uses affirmative zero-failure statements as successful verification", async () => {
+  const parsed = await parseTranscript("fixtures/affirmative-zero-failures.md");
+  assert.deepEqual(parsed.verification, [
+    "No tests failed.",
+    "There were no test failures.",
+    "None of the smoke checks failed.",
+    "The validation completed without errors."
+  ]);
 });
 
 test("does not treat explicitly resolved historical failures as blockers", async () => {
@@ -140,6 +150,9 @@ test("retains nonzero failures and active errors as blockers", async () => {
 
   const errored = await parseTranscript("fixtures/active-error.md");
   assert.deepEqual(errored.blockers, ["Error: release artifact is missing."]);
+
+  const mixed = await parseTranscript("fixtures/zero-failure-with-active-failure.md");
+  assert.deepEqual(mixed.blockers, ["No unit tests failed, but the integration check failed."]);
 });
 
 test("ignores negated and resolved errors while retaining successful verification", async () => {
@@ -153,14 +166,14 @@ test("ignores negated and resolved errors while retaining successful verificatio
 test("cli check accepts successful and resolved fixtures but rejects active failures", async () => {
   const tmp = await mkdtemp(path.join(os.tmpdir(), "agent-run-audit-"));
   try {
-    for (const fixture of ["zero-failures.md", "zero-failures-count-last.md", "resolved-failure.md", "negated-error.md", "resolved-error.md", "affirmative-outcome-verification.md", "historical-failure-current-pass.md"]) {
+    for (const fixture of ["zero-failures.md", "zero-failures-count-last.md", "affirmative-zero-failures.md", "resolved-failure.md", "negated-error.md", "resolved-error.md", "affirmative-outcome-verification.md", "historical-failure-current-pass.md"]) {
       const out = path.join(tmp, fixture);
       execFileSync("node", ["bin/agent-run-audit.js", "audit", `fixtures/${fixture}`, "--out", out]);
       const check = spawnSync("node", ["bin/agent-run-audit.js", "check", path.join(out, "audit.json")]);
       assert.equal(check.status, 0, `${fixture} should pass CLI check`);
     }
 
-    for (const fixture of ["active-failure.md", "active-error.md", "negated-verification.md", "negated-outcome-verification.md", "prospective-verification.md", "command-only-verification.md", "command-mentioned-verification.md", "historical-pass-current-not-run.md", "historical-pass-current-failure.md"]) {
+    for (const fixture of ["active-failure.md", "active-error.md", "zero-failure-with-active-failure.md", "negated-verification.md", "negated-outcome-verification.md", "prospective-verification.md", "command-only-verification.md", "command-mentioned-verification.md", "historical-pass-current-not-run.md", "historical-pass-current-failure.md"]) {
       const out = path.join(tmp, fixture);
       execFileSync("node", ["bin/agent-run-audit.js", "audit", `fixtures/${fixture}`, "--out", out]);
       const check = spawnSync("node", ["bin/agent-run-audit.js", "check", path.join(out, "audit.json")]);
