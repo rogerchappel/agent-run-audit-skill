@@ -41,9 +41,12 @@ that path; URLs continue to be reported separately.
 Blocker detection is intentionally conservative and line-oriented. Active blocker
 keywords such as `blocked`, `failed`, `error`, and `cannot` are reported, while
 explicitly successful summaries in count-first or count-last form (`0 failed` or
-`failed: 0`), resolved history (`Previously failed, now fixed`), and `No
-blockers` statements are ignored. Nonzero counts and ambiguous history remain
-blockers unless they include an explicit resolution.
+`failed: 0`), natural zero-failure statements (`No tests failed`, `There were
+no test failures`, or `completed without errors`), resolved history
+(`Previously failed, now fixed`), and `No blockers` statements are ignored.
+These zero-failure statements also count as affirmative verification. Nonzero
+counts, mixed statements that retain a current failure, and ambiguous history
+remain blockers unless they include an explicit resolution.
 
 Verification detection likewise requires affirmative evidence. Statements such
 as `Verification was not performed`, `The release check was not run`, and `npm
