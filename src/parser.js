@@ -63,7 +63,7 @@ function extractBlockers(lines) {
 
   return lines.filter((line, index) => {
     if (index < latestVerificationIndex && verificationFailurePattern.test(line)) return false;
-    const activeText = line
+    const activeText = removeSuccessfulZeroFailureLanguage(line)
       .replace(/\bno\s+(?:known\s+)?blockers?\b/gi, "")
       .replace(/\b0\s+(?:tests?\s+)?failed\b/gi, "")
       .replace(/\bfailed\s*:?\s*0\b/gi, "")
@@ -85,11 +85,15 @@ function extractVerification(lines) {
   for (const line of lines) {
     if (prospectivePattern.test(line)) continue;
 
-    const positiveAt = lastMatchIndex(line, evidencePattern);
+    const activeFailureText = removeSuccessfulZeroFailureLanguage(line);
+    const positiveAt = Math.max(
+      lastMatchIndex(line, evidencePattern),
+      lastMatchIndex(line, successfulZeroFailurePattern())
+    );
     const negativeAt = Math.max(
       lastMatchIndex(line, nonExecutionPattern),
       lastMatchIndex(line, unsuccessfulOutcomePattern),
-      lastMatchIndex(line, failedOutcomePattern)
+      lastMatchIndex(activeFailureText, failedOutcomePattern)
     );
 
     // Transcript order is the deterministic recency signal. A later explicit
@@ -105,6 +109,14 @@ function extractVerification(lines) {
   }
 
   return evidence;
+}
+
+function successfulZeroFailurePattern() {
+  return /(?:\bno\s+(?:[\w-]+\s+){0,4}(?:failed|failures?|errors?)\b(?=$|[.,;:]|\s+(?:and|but)\b)|\bthere\s+(?:was|were|is|are)\s+no\s+(?:[\w-]+\s+){0,4}(?:failures?|errors?)\b|\bnone\s+of\s+(?:the\s+)?(?:[\w-]+\s+){0,4}failed\b(?=$|[.,;:]|\s+(?:and|but)\b)|\bwithout\s+(?:any\s+)?(?:failures?|errors?)\b)/i;
+}
+
+function removeSuccessfulZeroFailureLanguage(line) {
+  return line.replace(new RegExp(successfulZeroFailurePattern().source, "gi"), "");
 }
 
 function lastMatchIndex(value, pattern) {
