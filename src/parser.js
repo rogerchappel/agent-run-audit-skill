@@ -26,8 +26,10 @@ function extractCommands(lines) {
   for (const line of lines) {
     const fenced = line.match(/^\$?\s*(npm|node|git|gh|pytest|cargo|bash|pnpm|yarn|bun)\b.+/);
     const inline = [...line.matchAll(/`([^`]*(?:npm|node|git|gh|pytest|cargo|bash|pnpm|yarn|bun)\s+[^`]*)`/g)];
-    if (fenced) commands.push(cleanCommand(fenced[0]));
-    for (const match of inline) commands.push(cleanCommand(match[1]));
+    if (fenced && !isExplicitlyNotRun(fenced[0])) commands.push(cleanCommand(fenced[0]));
+    for (const match of inline) {
+      if (!isExplicitlyNotRun(line)) commands.push(cleanCommand(match[1]));
+    }
   }
   return unique(commands);
 }
@@ -87,21 +89,19 @@ function extractVerification(lines) {
 
     const activeFailureText = removeSuccessfulZeroFailureLanguage(line);
     const positiveAt = Math.max(
-      lastMatchIndex(line, evidencePattern),
-      lastMatchIndex(line, successfulZeroFailurePattern())
+      lastMatchEnd(line, evidencePattern),
+      lastMatchEnd(line, successfulZeroFailurePattern())
     );
     const negativeAt = Math.max(
-      lastMatchIndex(line, nonExecutionPattern),
-      lastMatchIndex(line, unsuccessfulOutcomePattern),
-      lastMatchIndex(activeFailureText, failedOutcomePattern)
+      lastMatchEnd(line, nonExecutionPattern),
+      lastMatchEnd(line, unsuccessfulOutcomePattern),
+      lastMatchEnd(activeFailureText, failedOutcomePattern)
     );
 
     // Transcript order is the deterministic recency signal. A later explicit
     // non-run or failed outcome supersedes all earlier success evidence; a
     // later observed success starts a new current evidence set.
-    if (nonExecutionPattern.test(line) || unsuccessfulOutcomePattern.test(line)) {
-      evidence.length = 0;
-    } else if (negativeAt > positiveAt) {
+    if (negativeAt > positiveAt) {
       evidence.length = 0;
     } else if (positiveAt >= 0 && positiveAt > negativeAt) {
       evidence.push(line);
@@ -111,18 +111,23 @@ function extractVerification(lines) {
   return evidence;
 }
 
+function isExplicitlyNotRun(line) {
+  return /\b(?:was|were|is|are|has been|have been|did)\s+not\s+(?:run|executed|performed)\b/i.test(line)
+    || /\bnever\s+(?:ran|executed|performed)\b/i.test(line);
+}
+
 function successfulZeroFailurePattern() {
-  return /(?:\bno\s+(?:[\w-]+\s+){0,4}(?:failed|failures?|errors?)\b(?=$|[.,;:]|\s+(?:and|but)\b)|\bthere\s+(?:was|were|is|are)\s+no\s+(?:[\w-]+\s+){0,4}(?:failures?|errors?)\b|\bnone\s+of\s+(?:the\s+)?(?:[\w-]+\s+){0,4}failed\b(?=$|[.,;:]|\s+(?:and|but)\b)|\bwithout\s+(?:any\s+)?(?:failures?|errors?)\b)/i;
+  return /(?:\b0\s+(?:tests?\s+)?failed\b|\bfailed\s*:?\s*0\b|\bno\s+(?:[\w-]+\s+){0,4}(?:failed|failures?|errors?)\b(?=$|[.,;:]|\s+(?:and|but)\b)|\bthere\s+(?:was|were|is|are)\s+no\s+(?:[\w-]+\s+){0,4}(?:failures?|errors?)\b|\bnone\s+of\s+(?:the\s+)?(?:[\w-]+\s+){0,4}failed\b(?=$|[.,;:]|\s+(?:and|but)\b)|\bwithout\s+(?:any\s+)?(?:failures?|errors?)\b)/i;
 }
 
 function removeSuccessfulZeroFailureLanguage(line) {
   return line.replace(new RegExp(successfulZeroFailurePattern().source, "gi"), "");
 }
 
-function lastMatchIndex(value, pattern) {
+function lastMatchEnd(value, pattern) {
   const flags = pattern.flags.includes("g") ? pattern.flags : `${pattern.flags}g`;
   const matches = [...value.matchAll(new RegExp(pattern.source, flags))];
-  return matches.length ? matches.at(-1).index : -1;
+  return matches.length ? matches.at(-1).index + matches.at(-1)[0].length : -1;
 }
 
 function extractMatching(lines, pattern) {
