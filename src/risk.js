@@ -1,5 +1,5 @@
 export function classifySideEffects(parsed) {
-  const clauses = [...parsed.commands, ...parsed.lines].flatMap((line) => line.split(/[.;]/));
+  const clauses = [...parsed.commands, ...parsed.lines].flatMap((line) => line.split(/[.;]|\b(?:but|while)\b/i));
   const risks = [];
 
   addRisk(risks, "filesystem", hasAffirmativeActivity(clauses, /apply_patch|\brm\s|\bmv\s|\bwrite|\bedited|\bcreated|\bdeleted/i));
