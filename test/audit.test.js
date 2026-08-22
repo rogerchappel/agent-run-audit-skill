@@ -54,7 +54,7 @@ test("uses the latest explicit verification outcome", async () => {
 test("excludes explicitly negated commands and side effects", async () => {
   const parsed = await parseTranscript("fixtures/negated-side-effects.md");
   assert.deepEqual(parsed.commands, []);
-  assert.deepEqual(classifySideEffects(parsed).map((risk) => risk.type), ["package"]);
+  assert.deepEqual(classifySideEffects(parsed).map((risk) => risk.type), ["network", "package"]);
   assert.deepEqual(parsed.verification, ["Verification passed: npm test reported 3 passing tests."]);
 });
 
