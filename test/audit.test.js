@@ -46,6 +46,16 @@ test("uses the latest explicit verification outcome", async () => {
 
   const recovered = await parseTranscript("fixtures/historical-failure-current-pass.md");
   assert.deepEqual(recovered.verification, ["npm test passed for the current change."]);
+
+  const sameLine = await parseTranscript("fixtures/same-line-verification-recency.md");
+  assert.deepEqual(sameLine.verification, ["npm test was not run for the old revision, but npm test passed for the current change."]);
+});
+
+test("excludes explicitly negated commands and side effects", async () => {
+  const parsed = await parseTranscript("fixtures/negated-side-effects.md");
+  assert.deepEqual(parsed.commands, []);
+  assert.deepEqual(classifySideEffects(parsed).map((risk) => risk.type), ["network", "package"]);
+  assert.deepEqual(parsed.verification, ["Verification passed: npm test reported 3 passing tests."]);
 });
 
 test("does not count a bare command or command mention as completed verification", async () => {
