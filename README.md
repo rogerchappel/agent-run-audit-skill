@@ -64,6 +64,10 @@ An explicit later failure or statement that verification was not run clears
 earlier success evidence. A later observed success after historical failure
 becomes the current verification evidence. Prospective statements remain
 neutral: they neither prove success nor erase an already observed result.
+Command and side-effect extraction also ignores explicit non-execution, such
+as `npm install was not run`, `No files were created`, or `No network request
+was made`. When one line contains multiple explicit outcomes, the last outcome
+on that line wins, matching transcript order.
 
 External-account detection is also line-oriented. Affirmative references to
 Slack and common account services are high-risk. Generic sending and posting
