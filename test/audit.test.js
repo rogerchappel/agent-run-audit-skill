@@ -6,6 +6,8 @@ import os from "node:os";
 import path from "node:path";
 import { auditTranscript, classifySideEffects, parseTranscript } from "../src/index.js";
 
+const packageJson = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
+
 test("extracts commands, paths, URLs, and verification", async () => {
   const parsed = await parseTranscript("fixtures/success.md");
   assert.ok(parsed.commands.includes("npm test"));
@@ -252,6 +254,11 @@ test("cli help documents audit, summarize, and check commands", () => {
   assert.match(output, /agent-run-audit audit/);
   assert.match(output, /agent-run-audit summarize/);
   assert.match(output, /agent-run-audit check/);
+});
+
+test("cli reports the packaged version", () => {
+  const output = execFileSync("node", ["bin/agent-run-audit.js", "--version"], { encoding: "utf8" });
+  assert.equal(output.trim(), packageJson.version);
 });
 
 test("cli rejects malformed arguments with command usage", () => {
