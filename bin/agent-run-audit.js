@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 import { readFile } from "node:fs/promises";
-import pkg from "../package.json" with { type: "json" };
 import { auditTranscript, renderAuditMarkdown } from "../src/index.js";
+
+const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
 
 const [command, ...args] = process.argv.slice(2);
 

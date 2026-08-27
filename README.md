@@ -4,6 +4,9 @@
 
 ## Quickstart
 
+Node.js 20.0.0 or newer is supported. CI runs the complete release gate on the
+declared minimum version and on Node.js 22.
+
 ```bash
 npm install
 npm run smoke
