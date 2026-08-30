@@ -197,14 +197,29 @@ test("cli check accepts successful and resolved fixtures but rejects active fail
 });
 
 test("classifies external account side effects", async () => {
-  for (const fixture of ["external.md", "external-affirmative.md"]) {
-    const parsed = await parseTranscript(`fixtures/${fixture}`);
-    const risks = classifySideEffects(parsed);
-    assert.ok(
-      risks.some((risk) => risk.type === "external-account" && risk.level === "high"),
-      `${fixture} should identify external-account activity`
-    );
-  }
+  const parsed = await parseTranscript("fixtures/external-affirmative.md");
+  const risks = classifySideEffects(parsed);
+  assert.ok(risks.some((risk) => risk.type === "external-account" && risk.level === "high"));
+});
+
+test("does not classify prospective external-account activity", async () => {
+  const parsed = await parseTranscript("fixtures/external.md");
+  assert.ok(!classifySideEffects(parsed).some((risk) => risk.type === "external-account"));
+});
+
+test("does not classify references or prospective commands as side effects", async () => {
+  const parsed = await parseTranscript("fixtures/mention-only.md");
+  assert.deepEqual(classifySideEffects(parsed), []);
+});
+
+test("distinguishes executed commands from explicitly negated execution", async () => {
+  const parsed = await parseTranscript("fixtures/execution-evidence.md");
+  const risks = classifySideEffects(parsed);
+
+  assert.ok(risks.some((risk) => risk.type === "network"));
+  assert.ok(risks.some((risk) => risk.type === "github"));
+  assert.ok(risks.some((risk) => risk.type === "package"));
+  assert.ok(!risks.some((risk) => risk.type === "external-account"));
 });
 
 test("ignores sends to explicitly local destinations", async () => {
@@ -238,7 +253,7 @@ test("ignores explicitly negated external-account activity", async () => {
 test("cli check rejects affirmative external-account activity", async () => {
   const tmp = await mkdtemp(path.join(os.tmpdir(), "agent-run-audit-"));
   try {
-    const audit = await auditTranscript("fixtures/external.md", tmp);
+    const audit = await auditTranscript("fixtures/external-affirmative.md", tmp);
     assert.ok(audit.sideEffects.some((risk) => risk.type === "external-account" && risk.level === "high"));
 
     const check = spawnSync("node", ["bin/agent-run-audit.js", "check", path.join(tmp, "audit.json")]);
