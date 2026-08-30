@@ -108,6 +108,10 @@ npm run smoke
 - V1 uses heuristic extraction rather than a full shell parser.
 - It audits local transcript files only.
 - It does not prove that a claimed command actually ran unless the transcript contains that evidence.
+- Side effects require observed-activity language (for example, “ran,” “pushed,”
+  or “sent”). References, recommendations, prospective commands, URLs, and
+  explicitly negated activity are retained as transcript evidence but do not
+  count as observed side effects.
 
 ## Safety Notes
 
