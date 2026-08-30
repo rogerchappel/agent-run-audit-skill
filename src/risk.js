@@ -1,5 +1,5 @@
 export function classifySideEffects(parsed) {
-  const clauses = [...parsed.commands, ...parsed.lines].flatMap((line) => line.split(/[.;]|\b(?:but|while)\b/i));
+  const clauses = parsed.lines.flatMap((line) => line.split(/[.;]|\b(?:but|while)\b/i));
   const risks = [];
 
   addRisk(risks, "filesystem", hasAffirmativeActivity(clauses, /apply_patch|\brm\s|\bmv\s|\bwrite|\bedited|\bcreated|\bdeleted/i));
@@ -12,7 +12,15 @@ export function classifySideEffects(parsed) {
 }
 
 function hasAffirmativeActivity(clauses, pattern) {
-  return clauses.some((clause) => pattern.test(clause) && !isExplicitlyNegated(clause));
+  return clauses.some((clause) => pattern.test(clause) && isObservedActivity(clause) && !isExplicitlyNegated(clause));
+}
+
+function isObservedActivity(clause) {
+  if (/\b(?:recommend(?:ed|ation)?|reference|documentation|prospective|proposed|next step|should|could|would|will|plan(?:ned)?|need(?:s|ed)? to|to run)\b/i.test(clause)) {
+    return false;
+  }
+  return /^\s*\$\s*\S+/.test(clause)
+    || /\b(?:ran|executed|performed|used|called|fetched|downloaded|installed|tested|pushed|opened|created|wrote|written|edited|deleted|removed|sent|posted)\b/i.test(clause);
 }
 
 function isExplicitlyNegated(clause) {
@@ -25,10 +33,10 @@ function hasExternalAccountActivity(commands, lines) {
   const transfer = /\b(?:send|sent|sending|post|posted|posting)\b/i;
   const externalDestination = /\b(?:e-?mail|message|notification|webhook|channel|customer|client|user|external (?:account|service))s?\b/i;
   const explicitNegation = /(?:\b(?:no|never|without)\b.*\b(?:slack|gmail|salesforce|hubspot|stripe|send|sent|sending|post(?:ed|ing)?|external account)\b)|(?:\b(?:slack|gmail|salesforce|hubspot|stripe|send|sent|sending|post(?:ed|ing)?|external account)\b.*\b(?:was|were|is|are|did|does|has|have)\s+not\b)/i;
-  const clauses = [...commands, ...lines].flatMap((line) => line.split(/[.;]/));
+  const clauses = lines.flatMap((line) => line.split(/[.;]/));
   return clauses.some((clause) => {
     const activity = accountService.test(clause) || (transfer.test(clause) && externalDestination.test(clause));
-    return activity && !explicitNegation.test(clause);
+    return activity && isObservedActivity(clause) && !explicitNegation.test(clause) && !isExplicitlyNegated(clause);
   });
 }
 
