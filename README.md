@@ -18,6 +18,11 @@ Outputs:
 - `audit.json`: structured audit data.
 - `audit.md`: human-readable handoff summary.
 
+Markdown reports normalize transcript- and path-derived line breaks to spaces
+and escape Markdown punctuation. Evidence remains readable in its intended
+field or list item without being able to introduce headings, links, or sibling
+list items. The JSON report retains the original extracted values.
+
 ## Commands
 
 ```bash

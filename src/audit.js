@@ -48,12 +48,12 @@ export function renderAuditMarkdown(audit) {
   return [
     "# Agent Run Audit",
     "",
-    `Source: ${audit.source}`,
-    `Classification: ${audit.classification}`,
+    `Source: ${renderInline(audit.source)}`,
+    `Classification: ${renderInline(audit.classification)}`,
     "",
     "## Summary",
     "",
-    ...Object.entries(audit.summary).map(([key, value]) => `- ${key}: ${value}`),
+    ...Object.entries(audit.summary).map(([key, value]) => `- ${renderInline(key)}: ${renderInline(value)}`),
     "",
     renderList("Commands", audit.commands),
     renderList("Verification", audit.verification),
@@ -66,5 +66,13 @@ export function renderAuditMarkdown(audit) {
 }
 
 function renderList(title, values) {
-  return [`## ${title}`, "", ...(values.length ? values.map((value) => `- ${value}`) : ["None detected."]), ""].join("\n");
+  return [`## ${title}`, "", ...(values.length ? values.map((value) => `- ${renderInline(value)}`) : ["None detected."]), ""].join("\n");
+}
+
+function renderInline(value) {
+  return String(value)
+    .replace(/\r\n?|\n/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/([\\`*_{}\[\]()<>#+.!|~-])/g, "\\$1");
 }
