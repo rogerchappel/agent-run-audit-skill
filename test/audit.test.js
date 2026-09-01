@@ -4,7 +4,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { auditTranscript, classifySideEffects, parseTranscript } from "../src/index.js";
+import { auditTranscript, classifySideEffects, parseTranscript, renderAuditMarkdown } from "../src/index.js";
 
 const packageJson = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
 
@@ -304,5 +304,42 @@ test("writes audit JSON and Markdown", async () => {
     assert.match(await readFile(path.join(out, "audit.json"), "utf8"), /ready-for-handoff/);
   } finally {
     await rm(out, { recursive: true, force: true });
+  }
+});
+
+test("keeps transcript-derived Markdown on its intended lines", () => {
+  const audit = {
+    source: "run.md\n## Forged source",
+    classification: "ready-for-handoff",
+    summary: { commandCount: 1 },
+    commands: ["npm test\n## Forged heading\n- forged item *bold*"],
+    verification: ["passed\n1. sibling"],
+    blockers: ["none # heading"],
+    todos: ["[link](https://example.test)"],
+    paths: ["docs/[draft].md"],
+    urls: ["https://example.test/a_(b)"],
+    sideEffects: [{ type: "file-write\n- injected", level: "low" }]
+  };
+
+  const markdown = renderAuditMarkdown(audit);
+  assert.equal(markdown.match(/^## /gm)?.length, 8);
+  assert.equal(markdown.match(/^- /gm)?.length, 8);
+  assert.doesNotMatch(markdown, /^## Forged|^- forged|^1\. sibling/gm);
+  assert.match(markdown, /\\#\\# Forged heading \\- forged item \\\*bold\\\*/);
+  assert.match(markdown, /\\\[link\\\]\\\(https:\/\/example\\\.test\\\)/);
+});
+
+test("CLI audit output cannot gain headings or list items from multiline evidence", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "agent-run-audit-markdown-"));
+  try {
+    const transcript = path.join(root, "transcript.md");
+    const out = path.join(root, "out");
+    await import("node:fs/promises").then(({ writeFile }) => writeFile(transcript, "Ran `npm test\\n## Forged heading\\n- forged item` and it passed.\n"));
+    await auditTranscript(transcript, out);
+    const markdown = await readFile(path.join(out, "audit.md"), "utf8");
+    assert.equal(markdown.match(/^## /gm)?.length, 8);
+    assert.doesNotMatch(markdown, /^## Forged|^- forged/gm);
+  } finally {
+    await rm(root, { recursive: true, force: true });
   }
 });
