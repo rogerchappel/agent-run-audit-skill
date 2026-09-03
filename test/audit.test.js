@@ -16,6 +16,36 @@ test("extracts commands, paths, URLs, and verification", async () => {
   assert.ok(parsed.verification.some((line) => line.includes("passed")));
 });
 
+test("stops plain-text commands before narrative outcomes", async () => {
+  const parsed = await parseTranscript("fixtures/command-boundaries.md");
+  assert.deepEqual(parsed.commands, [
+    "npm test",
+    "node ./scripts/check.js --mode strict",
+    "git diff --check",
+    'node ./bin/tool.js --label "passed cleanly"'
+  ]);
+});
+
+test("writes bounded commands to CLI audit output", async () => {
+  const out = await mkdtemp(path.join(os.tmpdir(), "agent-run-audit-"));
+  try {
+    await auditTranscript("fixtures/command-boundaries.md", out);
+    const audit = JSON.parse(await readFile(path.join(out, "audit.json"), "utf8"));
+    assert.deepEqual(audit.commands, [
+      "npm test",
+      "node ./scripts/check.js --mode strict",
+      "git diff --check",
+      'node ./bin/tool.js --label "passed cleanly"'
+    ]);
+    const markdown = await readFile(path.join(out, "audit.md"), "utf8");
+    const commandsSection = markdown.match(/## Commands\n\n([\s\S]*?)\n## Verification/)[1];
+    assert.doesNotMatch(commandsSection, /npm test passed successfully/);
+    assert.match(commandsSection, /- npm test/);
+  } finally {
+    await rm(out, { recursive: true, force: true });
+  }
+});
+
 test("does not count explicitly non-executed checks as verification", async () => {
   const parsed = await parseTranscript("fixtures/negated-verification.md");
   assert.deepEqual(parsed.verification, []);
