@@ -26,12 +26,44 @@ function extractCommands(lines) {
   for (const line of lines) {
     const fenced = line.match(/^\$?\s*(npm|node|git|gh|pytest|cargo|bash|pnpm|yarn|bun)\b.+/);
     const inline = [...line.matchAll(/`([^`]*(?:npm|node|git|gh|pytest|cargo|bash|pnpm|yarn|bun)\s+[^`]*)`/g)];
-    if (fenced && !isExplicitlyNotRun(fenced[0])) commands.push(cleanCommand(fenced[0]));
+    if (fenced && !isExplicitlyNotRun(fenced[0])) {
+      commands.push(cleanCommand(stripNarrativeSuffix(fenced[0])));
+    }
     for (const match of inline) {
       if (!isExplicitlyNotRun(line)) commands.push(cleanCommand(match[1]));
     }
   }
   return unique(commands);
+}
+
+function stripNarrativeSuffix(command) {
+  const boundaries = [
+    /\s+(?:passed|failed)(?=\s|$)/gi,
+    /\s+(?:successfully|cleanly)(?=\s|$)/gi,
+    /\s+after\s+(?:reviewing|checking|completing)(?=\s|$)/gi
+  ];
+  let boundary = command.length;
+  for (const pattern of boundaries) {
+    for (const match of command.matchAll(pattern)) {
+      if (!isQuoted(command, match.index)) boundary = Math.min(boundary, match.index);
+    }
+  }
+  return command.slice(0, boundary);
+}
+
+function isQuoted(value, index) {
+  let quote = null;
+  for (let position = 0; position < index; position += 1) {
+    const character = value[position];
+    if (character === "\\") {
+      position += 1;
+    } else if (quote === character) {
+      quote = null;
+    } else if (!quote && (character === "'" || character === '"')) {
+      quote = character;
+    }
+  }
+  return quote !== null;
 }
 
 function extractPaths(lines) {
