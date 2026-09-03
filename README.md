@@ -18,6 +18,12 @@ Outputs:
 - `audit.json`: structured audit data.
 - `audit.md`: human-readable handoff summary.
 
+Plain-text command lines are bounded at common outcome narration such as
+`passed successfully`, `passed cleanly`, and `after reviewing files`. Real
+flags, paths, arguments, and quoted text remain part of the command. Commands
+inside backticks are retained exactly because the delimiters already identify
+their intended boundary.
+
 Markdown reports normalize transcript- and path-derived line breaks to spaces
 and escape Markdown punctuation. Evidence remains readable in its intended
 field or list item without being able to introduce headings, links, or sibling
