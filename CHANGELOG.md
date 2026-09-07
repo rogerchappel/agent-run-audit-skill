@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Reject trailing arguments passed to the help and version commands.
 - Add release-readiness checks for package metadata, pack contents, and CI verification.
 ## 0.1.0
 

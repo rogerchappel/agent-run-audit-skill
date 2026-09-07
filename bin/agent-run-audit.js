@@ -15,11 +15,13 @@ try {
 
 async function main(command, args) {
   if (command === "--version" || command === "version") {
+    rejectTrailingArgs(command, args);
     console.log(pkg.version);
     return;
   }
 
   if (!command || command === "--help" || command === "help") {
+    if (command) rejectTrailingArgs(command, args);
     printHelp();
     return;
   }
@@ -48,6 +50,10 @@ async function main(command, args) {
   }
 
   throw new Error(`Unknown command: ${command}`);
+}
+
+function rejectTrailingArgs(command, args) {
+  if (args.length > 0) throw new Error(`Usage: agent-run-audit ${command}`);
 }
 
 function parseArgs(command, args, allowedFlags = []) {
