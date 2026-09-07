@@ -306,6 +306,14 @@ test("cli reports the packaged version", () => {
   assert.equal(output.trim(), packageJson.version);
 });
 
+test("cli help and version aliases reject trailing arguments", () => {
+  for (const command of ["--help", "help", "--version", "version"]) {
+    const result = spawnSync("node", ["bin/agent-run-audit.js", command, "extra"], { encoding: "utf8" });
+    assert.notEqual(result.status, 0, command);
+    assert.match(result.stderr, new RegExp(`Usage: agent-run-audit ${command}$`, "m"), command);
+  }
+});
+
 test("cli rejects malformed arguments with command usage", () => {
   const cases = [
     ["audit", "fixtures/success.md", "--out"],
