@@ -35,11 +35,15 @@ list items. The JSON report retains the original extracted values.
 agent-run-audit audit ./transcript.md --out .audit
 agent-run-audit summarize .audit/audit.json
 agent-run-audit check .audit/audit.json
+agent-run-audit --help
+agent-run-audit --version
 ```
 
-Each command accepts exactly the paths and options shown above. `audit` may
-omit `--out` to use `.audit`; unknown or duplicate flags, a missing `--out`
-value, and extra positional arguments are usage errors.
+Each command accepts exactly the paths and options shown above. Help and
+version also accept the `help` and `version` aliases, respectively, with no
+trailing arguments. `audit` may omit `--out` to use `.audit`; unknown or
+duplicate flags, a missing `--out` value, and extra positional arguments are
+usage errors.
 
 `check` succeeds only for runs classified as `ready-for-handoff`. Blocked,
 high-risk, and missing-verification runs exit nonzero.
