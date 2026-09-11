@@ -44,6 +44,6 @@
   },
   "homepage": "https://github.com/rogerchappel/agent-run-audit-skill#readme",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   }
 }
